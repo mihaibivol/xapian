@@ -10,7 +10,8 @@ noinst_HEADERS +=\
 	api/queryinternal.h\
 	api/replication.h\
 	api/termlist.h\
-	api/vectortermlist.h
+	api/vectortermlist.h\
+	api/snipperinternal.h
 
 EXTRA_DIST +=\
 	api/dir_contents\
@@ -46,4 +47,5 @@ lib_src +=\
 	api/valuerangeproc.cc\
 	api/valuesetmatchdecider.cc\
 	api/vectortermlist.cc\
-	api/version.cc
+	api/version.cc\
+	api/snipper.cc
