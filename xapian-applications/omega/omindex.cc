@@ -1006,6 +1006,35 @@ index_directory(const string &path, const string &url_, size_t depth_limit,
     }
 }
 
+static off_t
+parse_size(char* p)
+{
+    // Don't want negative numbers, infinity, NaN, or hex numbers.
+    if (C_isdigit(p[0]) && (p[1] | 32) != 'x') {
+	double arg = strtod(p, &p);
+	switch (*p) {
+	    case '\0':
+		break;
+	    case 'k': case 'K':
+		arg *= 1024;
+		++p;
+		break;
+	    case 'm': case 'M':
+		arg *= (1024 * 1024);
+		++p;
+		break;
+	    case 'g': case 'G':
+		arg *= (1024 * 1024 * 1024);
+		++p;
+		break;
+	}
+	if (*p == '\0') {
+	    return off_t(arg);
+	}
+    }
+    return -1;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1356,36 +1385,19 @@ main(int argc, char **argv)
 	    verbose = true;
 	    break;
 	case 'E': {
-	    int arg = atoi(optarg);
-	    if (arg < 0) arg = 0;
-	    sample_size = arg;
-	    break;
+	    off_t arg = parse_size(optarg);
+	    if (arg >= 0) {
+		sample_size = size_t(arg);
+		break;
+	    }
+	    cerr << PROG_NAME": bad sample size '" << optarg << "'" << endl;
+	    return 1;
 	}
 	case 'm': {
-	    // Don't want negative numbers, infinity, NaN, or hex numbers.
-	    char * p = optarg;
-	    if (C_isdigit(p[0]) && (p[1] | 32) != 'x') {
-		double arg = strtod(p, &p);
-		switch (*p) {
-		    case '\0':
-			break;
-		    case 'k': case 'K':
-			arg *= 1024;
-			++p;
-			break;
-		    case 'm': case 'M':
-			arg *= (1024 * 1024);
-			++p;
-			break;
-		    case 'g': case 'G':
-			arg *= (1024 * 1024 * 1024);
-			++p;
-			break;
-		}
-		if (*p == '\0') {
-		    max_size = off_t(arg);
-		    break;
-		}
+	    off_t size = parse_size(optarg);
+	    if (size >= 0) {
+		max_size = size;
+		break;
 	    }
 	    cerr << PROG_NAME": bad max size '" << optarg << "'" << endl;
 	    return 1;
