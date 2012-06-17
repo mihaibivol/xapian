@@ -30,6 +30,9 @@
 // Types
 #include <xapian/types.h>
 
+// Function attributes
+#include <xapian/attributes.h>
+
 // Exceptions
 #include <xapian/error.h>
 #include <xapian/errorhandler.h>
@@ -89,7 +92,7 @@ namespace Xapian {
  * XAPIAN_VERSION) if shared libraries are being used.
  */
 XAPIAN_VISIBILITY_DEFAULT
-const char * version_string();
+const char * XAPIAN_NOTHROW(version_string()) XAPIAN_CONST_FUNCTION;
 
 /** Report the major version of the library which the program is linked with.
  *
@@ -97,7 +100,7 @@ const char * version_string();
  * XAPIAN_MAJOR_VERSION) if shared libraries are being used.
  */
 XAPIAN_VISIBILITY_DEFAULT
-int major_version();
+int XAPIAN_NOTHROW(major_version()) XAPIAN_CONST_FUNCTION;
 
 /** Report the minor version of the library which the program is linked with.
  *
@@ -105,7 +108,7 @@ int major_version();
  * XAPIAN_MINOR_VERSION) if shared libraries are being used.
  */
 XAPIAN_VISIBILITY_DEFAULT
-int minor_version();
+int XAPIAN_NOTHROW(minor_version()) XAPIAN_CONST_FUNCTION;
 
 /** Report the revision of the library which the program is linked with.
  *
@@ -113,7 +116,7 @@ int minor_version();
  * XAPIAN_REVISION) if shared libraries are being used.
  */
 XAPIAN_VISIBILITY_DEFAULT
-int revision();
+int XAPIAN_NOTHROW(revision()) XAPIAN_CONST_FUNCTION;
 
 }
 

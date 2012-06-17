@@ -2,8 +2,8 @@
 
 AUTOMAKE_OPTIONS = 1.5 subdir-objects
 
-# `make QUIET=' overrides `./configure --enable-quiet'.
-# `make QUIET=y' overrides `./configure' without `--enable-quiet'.
+# 'make QUIET=' overrides './configure --enable-quiet'.
+# 'make QUIET=y' overrides './configure' without '--enable-quiet'.
 LIBTOOL = @LIBTOOL@ $(QUIET:y=--quiet)
 
 if MAINTAINER_MODE
@@ -122,6 +122,7 @@ collated_apitest_sources = \
  api_compact.cc \
  api_db.cc \
  api_generated.cc \
+ api_geospatial.cc \
  api_matchspy.cc \
  api_metadata.cc \
  api_nodb.cc \
@@ -144,7 +145,7 @@ collated_apitest_sources = \
  api_unicode.cc \
  api_valuestats.cc \
  api_valuestream.cc \
- api_geospatial.cc \
+ api_weight.cc \
  api_wrdb.cc
 
 apitest_SOURCES = apitest.cc dbcheck.cc $(collated_apitest_sources) \
