@@ -189,9 +189,48 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	}
     }
 
+    ret_value += "Best 15 terms sequence:\n";
     for (unsigned int i = snippet_begin; i <= snippet_end; i++)
 	ret_value += docterms[i].second + " ";
 
+    ret_value += "\nBest normalized sentence:\n";
+
+    size_t last_pos = 0;
+    // Try basic sentence normalizing
+    double best_score = 0;
+    string best_sent;
+    do {
+	size_t new_pos = text.find('.', last_pos);
+	if (new_pos == string::npos) {
+	    break;
+	}
+
+	string sentence = text.substr(last_pos, new_pos - last_pos);
+	Document sent_doc;
+	term_gen.set_document(sent_doc);
+	term_gen.index_text(sentence);
+
+	double score = 0;
+	int sent_size = 0;
+	for (TermIterator it = sent_doc.termlist_begin(); it != sent_doc.termlist_end(); it++) {
+	    if ((*it).length() > 0 && (*it)[0] == 'Z') {
+		score += term_score[*it] * it.get_wdf();
+		sent_size += it.get_wdf();
+	    }
+	}
+
+	score /= sent_size;
+
+	if (score > best_score) {
+	    best_score = score;
+	    best_sent = sentence;
+	}
+
+	last_pos = new_pos + 1;
+    } while (true);
+
+    ret_value += best_sent;
+    ret_value += "\n";
 
     return ret_value;
 }
