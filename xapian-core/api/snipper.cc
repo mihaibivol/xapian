@@ -80,24 +80,55 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
         const Document & doc = ms_it.get_document();
 	for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++)
 	    if ((*term_it).length() > 0 && (*term_it)[0] == 'Z')
-		coll_size+=term_it.get_termfreq();
+		coll_size += term_it.get_termfreq();
     }
 
     // Relevance model for each term.
     map<string, double> term_score;
+    map<string, double> irelevance_score;
+
     for (vector<pair<int, string> >::iterator it = docterms.begin(); it < docterms.end(); it++) {
 	string term = "Z" + stemmer(it->second);
 	term_score[term] = 0;
+	irelevance_score[term] = 0;
     }
 
     // For each term in snippeted text, calculate irrelevance prob.
-    for (map<string, double>::iterator it = term_score.begin(); it != term_score.end(); it++) {
+    for (map<string, double>::iterator it = irelevance_score.begin(); it != irelevance_score.end(); it++) {
 	const string & term = it->first;
 
 	// Occurance of term in all documents.
 	int occurance = 0;
 
+	for (MSetIterator ms_it = mset.begin(); ms_it != mset.end(); ms_it++) {
+	    const Document & doc = ms_it.get_document();
+
+	    // Snippeted text term frequency.
+	    int tf = 0;
+
+	    // Add occurance of the term in document.
+	    for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
+		if (term == *term_it) {
+		    tf = term_it.get_termfreq();
+		    break;
+		}
+	    }
+	    occurance += tf;
+	}
+
+	it->second = (double)occurance / coll_size;
+    }
+
+    // Smootihg coefficient for relevance probability.
+    double alpha = .7;
+
+    // For each term in snippeted text, calculate relevance model.
+    for (map<string, double>::iterator it = term_score.begin(); it != term_score.end(); it++) {
+	const string & term = it->first;
+
+	// Occurance of term in all documents.
 	double relevant_prob = 0;
+	double irrelevant_prob = irelevance_score[term];
 
 	for (MSetIterator ms_it = mset.begin(); ms_it != mset.end(); ms_it++) {
 	    const Document & doc = ms_it.get_document();
@@ -108,19 +139,21 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	    int document_size = 0;
 
 	    for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
-		if ((*term_it).length() > 0 && (*term_it)[0] == 'Z')
+		if ((*term_it).length() > 0 && (*term_it)[0] == 'Z') {
 		    document_size += term_it.get_termfreq();
+		}
 
 		if (term == *term_it) {
 		    tf = term_it.get_termfreq();
 		}
 	    }
 
-	    occurance += tf;
-	    relevant_prob += ((double)tf / document_size) * (ms_it.get_weight() / total_weight);
+	    // Probability for term to be relevant in the current document.
+	    double term_doc_prob = alpha * ((double)tf / document_size) + (1 - alpha) * irrelevant_prob;
+	    // Probability for the current document to be relevant to the query.
+	    double doc_query_prob = ms_it.get_weight() / total_weight;
+	    relevant_prob += term_doc_prob * doc_query_prob;
 	}
-
-	double irrelevant_prob = (double)occurance / coll_size;
 
 	it->second = relevant_prob - irrelevant_prob;
     }
