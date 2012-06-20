@@ -80,7 +80,7 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
         const Document & doc = ms_it.get_document();
 	for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++)
 	    if ((*term_it).length() > 0 && (*term_it)[0] == 'Z')
-		coll_size += term_it.get_termfreq();
+		coll_size += term_it.get_wdf();
     }
 
     // Relevance model for each term.
@@ -109,7 +109,7 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	    // Add occurance of the term in document.
 	    for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
 		if (term == *term_it) {
-		    tf = term_it.get_termfreq();
+		    tf = term_it.get_wdf();
 		    break;
 		}
 	    }
@@ -140,11 +140,11 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 
 	    for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
 		if ((*term_it).length() > 0 && (*term_it)[0] == 'Z') {
-		    document_size += term_it.get_termfreq();
+		    document_size += term_it.get_wdf();
 		}
 
 		if (term == *term_it) {
-		    tf = term_it.get_termfreq();
+		    tf = term_it.get_wdf();
 		}
 	    }
 
