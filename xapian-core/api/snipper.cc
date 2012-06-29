@@ -42,6 +42,8 @@ Snipper::set_stemmer(const Stem & stemmer)
 string
 Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 {
+    string ret_value;
+
     Document text_doc;
     TermGenerator term_gen;
 
@@ -49,11 +51,6 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
     term_gen.set_stemmer(stemmer);
     term_gen.index_text(text);
 
-    string ret_value("\n###############################\n");
-
-    ret_value += text + "\n";
-
-    ret_value += "\n###############################\n";
     const Document & snippet_doc = term_gen.get_document();
 
     // Dummy docterms array
@@ -189,11 +186,8 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	}
     }
 
-    ret_value += "Best 15 terms sequence:\n";
     for (unsigned int i = snippet_begin; i <= snippet_end; i++)
 	ret_value += docterms[i].second + " ";
-
-    ret_value += "\nBest normalized sentence:\n";
 
     size_t last_pos = 0;
     // Try basic sentence normalizing
@@ -228,9 +222,6 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 
 	last_pos = new_pos + 1;
     } while (true);
-
-    ret_value += best_sent;
-    ret_value += "\n";
 
     return ret_value;
 }
