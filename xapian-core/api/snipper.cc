@@ -169,7 +169,6 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
     unsigned int snippet_end = snippet_size < docterms.size() ? snippet_size : docterms.size();
     double sum = 0;
     double max_sum = 0;
-    double interrupt_treshlod = .5;
     vector<double> docterms_relevance;
 
     ofstream out_stream(dumpfile.c_str());
@@ -177,31 +176,27 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
     for (unsigned int i = 0; i < docterms.size(); i++) {
 	string term = "Z" + stemmer(docterms[i].second);
 	docterms_relevance.push_back(term_score[term]);
+    }
+
+    // Remove interrupts.
+    for (unsigned int i = 0; i < docterms.size(); i++) {
+	double prev_score = i > 0 ? docterms_relevance[i - 1] : 0;
+	double next_score = i < (docterms.size() - 1) ? docterms_relevance[i + 1] : 0;
+	if (docterms_relevance[i] < prev_score &&
+	    docterms_relevance[i] < next_score) {
+	    docterms_relevance[i] = (prev_score + next_score) / 2;
+	}
 	out_stream << i << " " << docterms_relevance[i] << endl;
-	
     }
 
     for (unsigned int i = snippet_begin; i < snippet_end; i++) {
 	double score = docterms_relevance[i];
-	// Smooth interrupts.
-	double prev_score = i > 0 ? docterms_relevance[i - 1] : 0;
-	double next_score = i < docterms.size() - 1 ? docterms_relevance[i + 1] : 0;
-	if (prev_score > score + interrupt_treshlod &&
-	    next_score > score + interrupt_treshlod) {
-	    score = 0;
-	}
 	sum += score;
     }
     max_sum = sum;
 
     for (unsigned int i = snippet_end; i < docterms.size(); i++) {
 	double score = docterms_relevance[i];
-	double prev_score = i > 0 ? docterms_relevance[i - 1] : 0;
-	double next_score = i < docterms.size() - 1 ? docterms_relevance[i + 1] : 0;
-	if (prev_score > score + interrupt_treshlod &&
-	    next_score > score + interrupt_treshlod) {
-	    score = 0;
-	}
 	sum += score;
 
 	double head_score = docterms_relevance[i - snippet_size];
