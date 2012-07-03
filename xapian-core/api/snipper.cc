@@ -10,6 +10,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <fstream>
 
 using namespace std;
 
@@ -37,6 +38,12 @@ void
 Snipper::set_stemmer(const Stem & stemmer)
 {
     internal->stemmer = stemmer;
+}
+
+void
+Snipper::set_dumpfile(const string & filename)
+{
+    internal->dumpfile = filename;
 }
 
 string
@@ -165,9 +172,13 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
     double interrupt_treshlod = .5;
     vector<double> docterms_relevance;
 
+    ofstream out_stream(dumpfile.c_str());
+
     for (unsigned int i = 0; i < docterms.size(); i++) {
 	string term = "Z" + stemmer(docterms[i].second);
 	docterms_relevance.push_back(term_score[term]);
+	out_stream << i << " " << docterms_relevance[i] << endl;
+	
     }
 
     for (unsigned int i = snippet_begin; i < snippet_end; i++) {
