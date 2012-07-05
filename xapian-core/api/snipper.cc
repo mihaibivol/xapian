@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <map>
 #include <fstream>
+#include <queue>
 
 using namespace std;
 
@@ -164,9 +165,9 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 
     // Calculate basic snippet.
 
-    unsigned int snippet_size = 15;
+    unsigned int window_size = 25;
     unsigned int snippet_begin = 0;
-    unsigned int snippet_end = snippet_size < docterms.size() ? snippet_size : docterms.size();
+    unsigned int snippet_end = window_size < docterms.size() ? window_size : docterms.size();
     double sum = 0;
     double max_sum = 0;
     vector<double> docterms_relevance;
@@ -199,12 +200,12 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	double score = docterms_relevance[i];
 	sum += score;
 
-	double head_score = docterms_relevance[i - snippet_size];
+	double head_score = docterms_relevance[i - window_size];
 	sum -= head_score;
 
 	if (sum > max_sum) {
 	    max_sum = sum;
-	    snippet_begin = i - snippet_size + 1;
+	    snippet_begin = i - window_size + 1;
 	    snippet_end = i + 1;
 	}
     }
@@ -213,9 +214,13 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	ret_value += docterms[i].second + " ";
 
     size_t last_pos = 0;
-    // Try basic sentence normalizing
-    double best_score = 0;
-    string best_sent;
+
+    // Retrieve actual snippet.
+    string snippet;
+    // Snippet size in bytes.
+    unsigned int snippet_size = 200;
+
+    unsigned int current_size = 0;
     do {
 	size_t new_pos = text.find('.', last_pos);
 	if (new_pos == string::npos) {
@@ -227,24 +232,26 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	term_gen.set_document(sent_doc);
 	term_gen.index_text(sentence);
 
-	double score = 0;
 	int sent_size = 0;
 	for (TermIterator it = sent_doc.termlist_begin(); it != sent_doc.termlist_end(); it++) {
 	    if ((*it).length() > 0 && (*it)[0] == 'Z') {
-		score += term_score[*it] * it.get_wdf();
 		sent_size += it.get_wdf();
 	    }
 	}
 
-	score /= sent_size;
+	current_size += sent_size;
+	if (current_size > snippet_begin)
+	    snippet += sentence;
 
-	if (score > best_score) {
-	    best_score = score;
-	    best_sent = sentence;
-	}
+	if (current_size > snippet_end)
+	    break;
 
 	last_pos = new_pos + 1;
     } while (true);
+
+    snippet = snippet.substr(0, snippet_size);
+
+    ret_value += "\nXapian snippet:\n" + snippet + "...";
 
     return ret_value;
 }
