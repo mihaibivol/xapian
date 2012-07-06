@@ -29,10 +29,16 @@ Snipper::~Snipper()
 {
 }
 
-string
-Snipper::generate_snippet(const MSet & mset, const string & text)
+void
+Snipper::set_mset(const MSet & mset)
 {
-    return internal->generate_snippet(mset, text);
+    internal->calculate_rm(mset);
+}
+
+string
+Snipper::generate_snippet(const string & text)
+{
+    return internal->generate_snippet(text);
 }
 
 void
@@ -53,8 +59,45 @@ Snipper::Internal::is_stemmed(const string & term)
     return (term.length() > 0 && term[0] == 'Z');
 }
 
+void
+Snipper::Internal::calculate_rm(const MSet & mset)
+{
+    rm_docid current_id = 0;
+
+    // Initialize global relevance model info.
+    rm_total_weight = 0;
+    rm_coll_size = 0;
+    rm_documents.erase(rm_documents.begin(), rm_documents.end());
+    rm_term_data.erase(rm_term_data.begin(), rm_term_data.end());
+
+    // Index document and term data.
+    for (MSetIterator ms_it = mset.begin(); ms_it != mset.end(); ms_it++) {
+	rm_total_weight += ms_it.get_weight();
+	const Document & doc = ms_it.get_document();
+	int doc_size = 0;
+	for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
+	    if (is_stemmed(*term_it)) {
+		// Increase current document size.
+		doc_size += term_it.get_wdf();
+
+		// Update term information.
+		RMTermInfo & term_info = rm_term_data[*term_it];
+		term_info.coll_occurence += term_it.get_wdf();
+
+		// Add new document that indexes the term.
+		pair<rm_docid, int> td_data = make_pair(current_id, term_it.get_wdf());
+		term_info.indexed_docs_freq.push_back(td_data);
+	    }
+	}
+
+	rm_coll_size += doc_size;
+
+	rm_documents.push_back(RMDocumentInfo(current_id++, doc_size, ms_it.get_weight()));
+    }
+}
+
 string
-Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
+Snipper::Internal::generate_snippet(const string & text)
 {
     string ret_value;
 
@@ -80,97 +123,47 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 
     sort(docterms.begin(), docterms.end());
 
-    // Collection size in stemmed terms.
-    int coll_size = 0;
-    // Document total weight.
-    double total_weight = 0;
-
-    // Precalculate total weight and collection size.
-    for (MSetIterator ms_it = mset.begin(); ms_it != mset.end(); ms_it++) {
-	total_weight += ms_it.get_weight();
-        const Document & doc = ms_it.get_document();
-	for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++)
-	    if (is_stemmed(*term_it))
-		coll_size += term_it.get_wdf();
-    }
-
     // Relevance model for each term.
     map<string, double> term_score;
-    map<string, double> irelevance_score;
 
-    for (vector<pair<int, string> >::iterator it = docterms.begin(); it < docterms.end(); it++) {
-	string term = "Z" + stemmer(it->second);
-	term_score[term] = 0;
-	irelevance_score[term] = 0;
-    }
-
-    // For each term in snippeted text, calculate irrelevance prob.
-    for (map<string, double>::iterator it = irelevance_score.begin(); it != irelevance_score.end(); it++) {
-	const string & term = it->first;
-
-	// Occurance of term in all documents.
-	int occurance = 0;
-
-	for (MSetIterator ms_it = mset.begin(); ms_it != mset.end(); ms_it++) {
-	    const Document & doc = ms_it.get_document();
-
-	    // Snippeted text term frequency.
-	    int tf = 0;
-
-	    // Add occurance of the term in document.
-	    for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
-		if (term == *term_it) {
-		    tf = term_it.get_wdf();
-		    break;
-		}
-	    }
-	    occurance += tf;
-	}
-
-	it->second = (double)occurance / coll_size;
-    }
 
     // Smootihg coefficient for relevance probability.
     double alpha = .5;
 
-    // For each term in snippeted text, calculate relevance model.
+    // Init docterms score.
+    for (vector<pair<int, string> >::iterator it = docterms.begin(); it < docterms.end(); it++) {
+	string term = "Z" + stemmer(it->second);
+	term_score[term] = 0;
+    }
+
     for (map<string, double>::iterator it = term_score.begin(); it != term_score.end(); it++) {
 	const string & term = it->first;
 
-	// Occurance of term in all documents.
+	const RMTermInfo & term_info = rm_term_data[term];
+	double irrelevant_prob = (double)term_info.coll_occurence / rm_coll_size;
 	double relevant_prob = 0;
-	double irrelevant_prob = irelevance_score[term];
+	for (unsigned int i = 0; i < term_info.indexed_docs_freq.size(); i++) {
+	    rm_docid c_docid = term_info.indexed_docs_freq[i].first;
+	    // Occurrence of term in document.
+	    int doc_freq = term_info.indexed_docs_freq[i].second;
 
-	for (MSetIterator ms_it = mset.begin(); ms_it != mset.end(); ms_it++) {
-	    const Document & doc = ms_it.get_document();
-
-	    // Snippeted text term frequency.
-	    int tf = 0;
-	    // Document size.
-	    int document_size = 0;
-
-	    for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
-		if (is_stemmed(*term_it)) {
-		    document_size += term_it.get_wdf();
-		}
-
-		if (term == *term_it) {
-		    tf = term_it.get_wdf();
-		}
-	    }
-
+	    // Document info.
+	    const RMDocumentInfo & rm_doc_info = rm_documents[c_docid];
 	    // Probability for term to be relevant in the current document.
-	    double term_doc_prob = alpha * ((double)tf / document_size) + (1 - alpha) * irrelevant_prob;
+	    double term_doc_prob = alpha * ((double)doc_freq / rm_doc_info.document_size)
+				   + (1 - alpha) * irrelevant_prob;
+
 	    // Probability for the current document to be relevant to the query.
-	    double doc_query_prob = ms_it.get_weight() / total_weight;
+	    double doc_query_prob = rm_doc_info.weight / rm_total_weight;
+
 	    relevant_prob += term_doc_prob * doc_query_prob;
 	}
 
+	// Add relevance to map.
 	it->second = relevant_prob - irrelevant_prob;
     }
 
     // Calculate basic snippet.
-
     unsigned int window_size = 25;
     unsigned int snippet_begin = 0;
     unsigned int snippet_end = window_size < docterms.size() ? window_size : docterms.size();

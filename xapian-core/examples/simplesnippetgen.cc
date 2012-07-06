@@ -84,6 +84,7 @@ try {
 
     Xapian::Snipper snipper;
     snipper.set_stemmer(stemmer);
+    snipper.set_mset(matches);
     for (Xapian::MSetIterator i = matches.begin(); i != matches.end(); ++i) {
 	// Get only the sample from the document data.
 	string gen_text = i.get_document().get_data();
@@ -97,7 +98,7 @@ try {
 	gen_text.erase(gen_text.begin() + type_pos, gen_text.end());
 
 	cout << i.get_rank() + 1 << ": " << i.get_weight() << " docid=" << *i
-	     << " [" << snipper.generate_snippet(matches, gen_text) << "]\n\n";
+	     << " [" << snipper.generate_snippet(gen_text) << "]\n\n";
     }
 } catch (const Xapian::Error &e) {
     cout << e.get_description() << endl;
