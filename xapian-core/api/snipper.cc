@@ -47,6 +47,12 @@ Snipper::set_dumpfile(const string & filename)
     internal->dumpfile = filename;
 }
 
+bool
+Snipper::Internal::is_stemmed(const string & term)
+{
+    return (term.length() > 0 && term[0] == 'Z');
+}
+
 string
 Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 {
@@ -64,7 +70,7 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
     // Dummy docterms array
     vector<pair<int, string> > docterms;
     for (TermIterator it = snippet_doc.termlist_begin(); it != snippet_doc.termlist_end(); it++) {
-	if ((*it).length() > 0 && (*it)[0] == 'Z')
+	if (is_stemmed(*it))
 	    continue;
 
 	for (PositionIterator pit = it.positionlist_begin(); pit != it.positionlist_end(); pit++) {
@@ -84,7 +90,7 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	total_weight += ms_it.get_weight();
         const Document & doc = ms_it.get_document();
 	for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++)
-	    if ((*term_it).length() > 0 && (*term_it)[0] == 'Z')
+	    if (is_stemmed(*term_it))
 		coll_size += term_it.get_wdf();
     }
 
@@ -144,7 +150,7 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 	    int document_size = 0;
 
 	    for (TermIterator term_it = doc.termlist_begin(); term_it != doc.termlist_end(); term_it++) {
-		if ((*term_it).length() > 0 && (*term_it)[0] == 'Z') {
+		if (is_stemmed(*term_it)) {
 		    document_size += term_it.get_wdf();
 		}
 
@@ -234,7 +240,7 @@ Snipper::Internal::generate_snippet(const MSet & mset, const string & text)
 
 	int sent_size = 0;
 	for (TermIterator it = sent_doc.termlist_begin(); it != sent_doc.termlist_end(); it++) {
-	    if ((*it).length() > 0 && (*it)[0] == 'Z') {
+	    if (is_stemmed(*it)) {
 		sent_size += it.get_wdf();
 	    }
 	}

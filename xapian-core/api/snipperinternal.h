@@ -14,6 +14,8 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 	std::string dumpfile;
 
 	std::string generate_snippet(const MSet & mset, const std::string & text);
+    private:
+	bool is_stemmed(const std::string & term);
 };
 }
 
