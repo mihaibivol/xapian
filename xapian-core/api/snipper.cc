@@ -47,12 +47,6 @@ Snipper::set_stemmer(const Stem & stemmer)
     internal->stemmer = stemmer;
 }
 
-void
-Snipper::set_dumpfile(const string & filename)
-{
-    internal->dumpfile = filename;
-}
-
 bool
 Snipper::Internal::is_stemmed(const string & term)
 {

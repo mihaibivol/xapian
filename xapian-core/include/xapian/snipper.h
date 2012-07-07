@@ -28,8 +28,6 @@ class XAPIAN_VISIBILITY_DEFAULT Snipper {
 
     void set_mset(const MSet & mset);
 
-    void set_dumpfile(const std::string & filename);
-
     std::string generate_snippet(const std::string & text);
 };
 
