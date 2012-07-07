@@ -1,3 +1,32 @@
+Mon Jul 02 05:27:43 GMT 2012  Dan Colish <dcolish@gmail.com>
+
+	* backends/brass/brass_databasereplicator.cc: Use new/delete to avoid
+	  variable length array gcc extension and comply with c++98
+
+Mon Jul 02 05:02:14 GMT 2012  Dan Colish <dcolish@gmail.com>
+
+	* api/omdatabase.cc,tests/api_wrdb.cc: Prefer container.empty() to
+	  container.size() == 0.
+
+Sun Jul 01 10:46:19 GMT 2012  Olly Betts <olly@survex.com>
+
+	* NEWS: Update from ChangeLog, 1.2.11 and 1.2.12.
+
+Fri Jun 29 15:32:11 GMT 2012  Dan Colish <dcolish@>
+
+	* tests/harness/testsuite.cc: Add safeunistd.h unconditionally for
+	  isatty, required by GCC 4.7
+
+Wed Jun 27 10:45:13 GMT 2012  Olly Betts <olly@survex.com>
+
+	* AUTHORS: Add GSoC students.
+
+Tue Jun 26 08:45:03 GMT 2012  Olly Betts <olly@survex.com>
+
+	* include/xapian.h: Add check for Qt headers being included before us
+	  and defining 'slots' as a macro - if they are, give a clear error
+	  advising how to work around this.
+
 Thu Jun 14 23:48:15 GMT 2012  Olly Betts <olly@survex.com>
 
 	* docs/admin_notes.rst: Correction - we don't "create a lock file", we
