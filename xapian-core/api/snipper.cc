@@ -203,9 +203,6 @@ Snipper::Internal::generate_snippet(const string & text)
 	}
     }
 
-    for (unsigned int i = snippet_begin; i <= snippet_end; i++)
-	ret_value += docterms[i].second + " ";
-
     size_t last_pos = 0;
 
     // Retrieve actual snippet.
@@ -244,9 +241,9 @@ Snipper::Internal::generate_snippet(const string & text)
 
     snippet = snippet.substr(0, snippet_size);
 
-    ret_value += "\nXapian snippet:\n" + snippet + "...";
+    ret_value = snippet;
 
-    return ret_value;
+    return snippet;
 }
 
 }
