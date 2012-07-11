@@ -19,6 +19,9 @@ namespace Xapian {
 
 Snipper::Snipper() : internal(new Snipper::Internal)
 {
+    internal->window_size = 25;
+    internal->smoothing_coef = .5;
+    internal->rm_docno = 10;
 }
 
 Snipper::Snipper(const Snipper & other) : internal(other.internal)
@@ -47,6 +50,24 @@ Snipper::set_stemmer(const Stem & stemmer)
     internal->stemmer = stemmer;
 }
 
+void
+Snipper::set_rm_docno(unsigned int rm_docno)
+{
+    internal->rm_docno = rm_docno;
+}
+
+void
+Snipper::set_smoothing_coef(double coef)
+{
+    internal->smoothing_coef = coef;
+}
+
+void
+Snipper::set_window_size(unsigned int window_size)
+{
+    internal->window_size = window_size;
+}
+
 bool
 Snipper::Internal::is_stemmed(const string & term)
 {
@@ -64,8 +85,11 @@ Snipper::Internal::calculate_rm(const MSet & mset)
     rm_documents.erase(rm_documents.begin(), rm_documents.end());
     rm_term_data.erase(rm_term_data.begin(), rm_term_data.end());
 
+    unsigned int current_doc = 0;
     // Index document and term data.
     for (MSetIterator ms_it = mset.begin(); ms_it != mset.end(); ms_it++) {
+	if (++current_doc > rm_docno)
+	    break;
 	rm_total_weight += ms_it.get_weight();
 	const Document & doc = ms_it.get_document();
 	int doc_size = 0;
@@ -122,7 +146,7 @@ Snipper::Internal::generate_snippet(const string & text)
 
 
     // Smootihg coefficient for relevance probability.
-    double alpha = .5;
+    double alpha = smoothing_coef;
 
     // Init docterms score.
     for (vector<pair<int, string> >::iterator it = docterms.begin(); it < docterms.end(); it++) {
@@ -158,7 +182,6 @@ Snipper::Internal::generate_snippet(const string & text)
     }
 
     // Calculate basic snippet.
-    unsigned int window_size = 25;
     unsigned int snippet_begin = 0;
     unsigned int snippet_end = window_size < docterms.size() ? window_size : docterms.size();
     double sum = 0;
@@ -241,9 +264,9 @@ Snipper::Internal::generate_snippet(const string & text)
 
     snippet = snippet.substr(0, snippet_size);
 
-    ret_value = snippet;
+    ret_value = snippet + "...";
 
-    return snippet;
+    return ret_value;
 }
 
 }

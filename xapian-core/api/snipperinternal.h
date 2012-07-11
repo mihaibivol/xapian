@@ -53,6 +53,15 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 	/** Relevance model total document weight */
 	double rm_total_weight;
 
+	/** Smoothing coeficient used for computing the relevance model */
+	double smoothing_coef;
+
+	/** Size of the window that returns the relevant snippet */
+	unsigned int window_size;
+
+	/** Relevance model document number */
+	unsigned int rm_docno;
+
 	Internal() : rm_coll_size(0), rm_total_weight(0) { }
 
 	/** Return snippet generated from text using the precalculated relevance model */

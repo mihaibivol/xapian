@@ -28,6 +28,12 @@ class XAPIAN_VISIBILITY_DEFAULT Snipper {
 
     void set_mset(const MSet & mset);
 
+    void set_window_size(unsigned int window_size);
+
+    void set_smoothing_coef(double coef);
+
+    void set_rm_docno(unsigned int docno);
+
     std::string generate_snippet(const std::string & text);
 };
 
