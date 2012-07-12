@@ -235,12 +235,12 @@ Snipper::Internal::generate_snippet(const string & text)
 
     unsigned int current_size = 0;
     do {
-	size_t new_pos = text.find('.', last_pos);
+	size_t new_pos = text.find(". ", last_pos);
 	if (new_pos == string::npos) {
 	    break;
 	}
 
-	string sentence = text.substr(last_pos, new_pos - last_pos);
+	string sentence = text.substr(last_pos, new_pos - last_pos + 1);
 	Document sent_doc;
 	term_gen.set_document(sent_doc);
 	term_gen.index_text(sentence);
