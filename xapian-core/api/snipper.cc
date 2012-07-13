@@ -12,6 +12,7 @@
 #include <map>
 #include <fstream>
 #include <queue>
+#include <iostream>
 
 using namespace std;
 
@@ -235,9 +236,13 @@ Snipper::Internal::generate_snippet(const string & text)
 
     unsigned int current_size = 0;
     do {
+	if (last_pos == text.length()) {
+	    break;
+	}
+
 	size_t new_pos = text.find(". ", last_pos);
 	if (new_pos == string::npos) {
-	    break;
+	    new_pos = text.length() - 1;
 	}
 
 	string sentence = text.substr(last_pos, new_pos - last_pos + 1);
@@ -246,9 +251,17 @@ Snipper::Internal::generate_snippet(const string & text)
 	term_gen.index_text(sentence);
 
 	int sent_size = 0;
+	vector<pair<int, string> > sent_terms;
 	for (TermIterator it = sent_doc.termlist_begin(); it != sent_doc.termlist_end(); it++) {
 	    if (is_stemmed(*it)) {
-		sent_size += it.get_wdf();
+		continue;
+	    }
+
+	    PositionIterator pit_begin = it.positionlist_begin();
+	    PositionIterator pit_end = it.positionlist_end();
+
+	    for (PositionIterator pit = pit_begin; pit != pit_end; pit++) {
+		sent_size++;
 	    }
 	}
 
