@@ -269,9 +269,6 @@ Snipper::Internal::generate_snippet(const string & text)
 	if (current_size > snippet_begin)
 	    snippet += sentence;
 
-	if (current_size > snippet_end)
-	    break;
-
 	last_pos = new_pos + 1;
     } while (true);
 
