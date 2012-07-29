@@ -921,6 +921,7 @@ CMD_url,
 CMD_value,
 CMD_version,
 CMD_weight,
+CMD_snippet,
 CMD_MACRO // special tag for macro evaluation
 };
 
@@ -1044,6 +1045,7 @@ T(url,		   1, 1, N, 0), // url encode argument
 T(value,	   1, 2, N, 0), // return document value
 T(version,	   0, 0, N, 0), // omega version string
 T(weight,	   0, 0, N, 0), // weight of the current hit
+T(snippet,	   1, 1, N, 0), // generate snippet from text
 { NULL,{0,	   0, 0, 0, 0}}
 };
 
@@ -2046,6 +2048,13 @@ eval(const string &fmt, const vector<string> &param)
 	    case CMD_weight:
 		value = double_to_string(weight);
 		break;
+	    case CMD_snippet: {
+		Xapian::Snipper snipper;
+		snipper.set_mset(mset);
+		snipper.set_stemmer(Xapian::Stem(option["stemmer"]));
+		value = snipper.generate_snippet(args[0]);
+		break;
+	    }
 	    default: {
 		args.insert(args.begin(), param[0]);
 		int macro_no = func->second->tag - CMD_MACRO;
