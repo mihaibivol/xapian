@@ -17,9 +17,6 @@ namespace Xapian {
 
 Snipper::Snipper() : internal(new Snipper::Internal)
 {
-    internal->window_size = 25;
-    internal->smoothing_coef = .5;
-    internal->rm_docno = 10;
 }
 
 Snipper::Snipper(const Snipper & other) : internal(other.internal)
@@ -96,7 +93,7 @@ Snipper::Internal::calculate_rm(const MSet & mset)
 		term_info.coll_occurence += term_it.get_wdf();
 
 		// Add new document that indexes the term.
-		pair<rm_docid, int> td_data = make_pair(current_id, term_it.get_wdf());
+		TermDocInfo td_data(current_id, term_it.get_wdf());
 		term_info.indexed_docs_freq.push_back(td_data);
 	    }
 	}
@@ -154,9 +151,9 @@ Snipper::Internal::generate_snippet(const string & text)
 	double irrelevant_prob = (double)term_info.coll_occurence / rm_coll_size;
 	double relevant_prob = 0;
 	for (unsigned int i = 0; i < term_info.indexed_docs_freq.size(); i++) {
-	    rm_docid c_docid = term_info.indexed_docs_freq[i].first;
+	    rm_docid c_docid = term_info.indexed_docs_freq[i].docid;
 	    // Occurrence of term in document.
-	    int doc_freq = term_info.indexed_docs_freq[i].second;
+	    int doc_freq = term_info.indexed_docs_freq[i].freq;
 
 	    // Document info.
 	    const RMDocumentInfo & rm_doc_info = rm_documents[c_docid];

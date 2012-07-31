@@ -1,18 +1,26 @@
 #ifndef XAPIAN_INCLUDED_SNIPPERINTERNAL_H
 #define XAPIAN_INCLUDED_SNIPPERINTERNAL_H
 
-#include <xapian/stem.h>
 #include <xapian/enquire.h>
+#include <xapian/snipper.h>
+#include <xapian/stem.h>
+
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace Xapian {
 
 class Snipper::Internal : public Xapian::Internal::intrusive_base {
+
+    private:
+	/** Checks if a term is marked as stemmed. */
+	bool is_stemmed(const std::string & term);
+
     public:
 	typedef int rm_docid;
 
+	/** Holds information about a document in the relevance model.*/
 	struct RMDocumentInfo {
 	    /** ID in the relevance model */
 	    rm_docid rm_id;
@@ -27,9 +35,22 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 		weight(weight_) { }
 	};
 
+	/** Holds information about a term in a document */
+	struct TermDocInfo {
+	    /** Relevance model document id.*/
+	    rm_docid docid;
+	    /** Frequency of term in document */
+	    int	 freq;
+
+	    TermDocInfo(rm_docid docid_, int freq_) :
+		docid(docid_),
+		freq(freq_) { }
+	};
+
+	/** Holds information about a term in the relevance model */
 	struct RMTermInfo {
 	    /** Documents that index the term in relevance model */
-	    std::vector<std::pair<rm_docid, int> > indexed_docs_freq;
+	    std::vector<TermDocInfo> indexed_docs_freq;
 	    /** Occurance in collection */
 	    int coll_occurence;
 
@@ -38,8 +59,6 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 
 	/** Stemmer used for generating text terms */
 	Stem stemmer;
-	// For debug purposes.
-	std::string dumpfile;
 
 	/** Relevance Model documents. */
 	std::vector<RMDocumentInfo> rm_documents;
@@ -62,17 +81,19 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 	/** Relevance model document number */
 	unsigned int rm_docno;
 
-	Internal() : rm_coll_size(0), rm_total_weight(0) { }
+	Internal() : rm_coll_size(0),
+		     rm_total_weight(0),
+		     smoothing_coef(.5),
+		     window_size(25),
+		     rm_docno(10) { }
 
 	/** Return snippet generated from text using the precalculated relevance model */
 	std::string generate_snippet(const std::string & text);
 
 	/** Calculate relevance model based on a MSet */
 	void calculate_rm(const MSet & mset);
-
-    private:
-	bool is_stemmed(const std::string & term);
 };
+
 }
 
 #endif /* XAPIAN_INCLUDED_SNIPPERINTERNAL_H */
