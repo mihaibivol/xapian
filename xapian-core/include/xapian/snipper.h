@@ -17,7 +17,7 @@ class Stem;
 class XAPIAN_VISIBILITY_DEFAULT Snipper {
   public:
 
-    /// Class representing snipper internals
+    /// Class representing snipper internals.
     class Internal;
 
     Xapian::Internal::intrusive_ptr<Internal> internal;
@@ -31,14 +31,33 @@ class XAPIAN_VISIBILITY_DEFAULT Snipper {
     /** Set the stemmer for the Snipper object. */
     void set_stemmer(const Xapian::Stem & stemmer);
 
-    /** Set the MSet and calculate the relevance model according to it. */
-    void set_mset(const MSet & mset);
+    /**
+     * Set the MSet and calculate the relevance model according to it.
+     *
+     * @param mset	MSet with the documents relevant to the query.
+     * @param rm_docno	Maximum number of documents for the relevance
+     *			model (default: 10).
+     */
+    void set_mset(const MSet & mset,
+		  unsigned int rm_docno = 10);
 
+    /**
+     * Set the window size used by generate_snippet method.
+     *
+     * Before this method is called, the default 25 value is used.
+     *
+     * @param window_size   Size of the window
+     */
     void set_window_size(unsigned int window_size);
 
+    /**
+     * Set the smootihg coefficient used by generate_snippet method.
+     *
+     * Before this method is called, the default .5 value is used.
+     *
+     * @param coef	Smoothing coefficient.
+     */
     void set_smoothing_coef(double coef);
-
-    void set_rm_docno(unsigned int docno);
 
     /** Generate snippet from given text.
      *
@@ -48,7 +67,6 @@ class XAPIAN_VISIBILITY_DEFAULT Snipper {
      */
     std::string generate_snippet(const std::string & text);
 };
-
 
 }
 

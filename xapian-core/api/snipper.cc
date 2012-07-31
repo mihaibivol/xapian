@@ -1,18 +1,15 @@
 #include "xapian/snipper.h"
 #include "snipperinternal.h"
 
-#include <xapian/enquire.h>
-#include <xapian/stem.h>
 #include <xapian/document.h>
+#include <xapian/enquire.h>
 #include <xapian/termgenerator.h>
+#include <xapian/stem.h>
 
-#include <string>
-#include <vector>
 #include <algorithm>
 #include <map>
-#include <fstream>
-#include <queue>
-#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -34,8 +31,9 @@ Snipper::~Snipper()
 }
 
 void
-Snipper::set_mset(const MSet & mset)
+Snipper::set_mset(const MSet & mset, unsigned int rm_docno)
 {
+    internal->rm_docno = rm_docno;
     internal->calculate_rm(mset);
 }
 
@@ -49,12 +47,6 @@ void
 Snipper::set_stemmer(const Stem & stemmer)
 {
     internal->stemmer = stemmer;
-}
-
-void
-Snipper::set_rm_docno(unsigned int rm_docno)
-{
-    internal->rm_docno = rm_docno;
 }
 
 void
@@ -129,7 +121,7 @@ Snipper::Internal::generate_snippet(const string & text)
 
     const Document & snippet_doc = term_gen.get_document();
 
-    // Dummy docterms array
+    // Document terms.
     vector<pair<int, string> > docterms;
     for (TermIterator it = snippet_doc.termlist_begin(); it != snippet_doc.termlist_end(); it++) {
 	if (is_stemmed(*it))
@@ -189,8 +181,6 @@ Snipper::Internal::generate_snippet(const string & text)
     double max_sum = 0;
     vector<double> docterms_relevance;
 
-    ofstream out_stream(dumpfile.c_str());
-
     for (unsigned int i = 0; i < docterms.size(); i++) {
 	string term = "Z" + stemmer(docterms[i].second);
 	docterms_relevance.push_back(term_score[term]);
@@ -204,7 +194,6 @@ Snipper::Internal::generate_snippet(const string & text)
 	    docterms_relevance[i] < next_score) {
 	    docterms_relevance[i] = (prev_score + next_score) / 2;
 	}
-	out_stream << i << " " << docterms_relevance[i] << endl;
     }
 
     for (unsigned int i = snippet_begin; i < snippet_end; i++) {
