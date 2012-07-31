@@ -17,6 +17,10 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 	/** Checks if a term is marked as stemmed. */
 	bool is_stemmed(const std::string & term);
 
+	static const double default_smoothing_coef;
+	static const unsigned int default_rm_docno;
+	static const unsigned int default_window_size;
+
     public:
 	typedef int rm_docid;
 
@@ -98,9 +102,9 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 
 	Internal() : rm_coll_size(0),
 		     rm_total_weight(0),
-		     smoothing_coef(.5),
-		     window_size(25),
-		     rm_docno(10) { }
+		     smoothing_coef(default_smoothing_coef),
+		     window_size(default_window_size),
+		     rm_docno(default_rm_docno) { }
 
 	/** Return snippet generated from text using the precalculated relevance model */
 	std::string generate_snippet(const std::string & text);

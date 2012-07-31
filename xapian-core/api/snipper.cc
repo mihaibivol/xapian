@@ -58,6 +58,11 @@ Snipper::set_window_size(unsigned int window_size)
     internal->window_size = window_size;
 }
 
+// Init constants.
+const double Snipper::Internal::default_smoothing_coef = .5;
+const unsigned int Snipper::Internal::default_rm_docno = 10;
+const unsigned int Snipper::Internal::default_window_size = 25;
+
 bool
 Snipper::Internal::is_stemmed(const string & term)
 {
