@@ -119,13 +119,13 @@ Snipper::Internal::generate_snippet(const string & text)
     const Document & snippet_doc = term_gen.get_document();
 
     // Document terms.
-    vector<pair<int, string> > docterms;
+    vector<TermPositionInfo> docterms;
     for (TermIterator it = snippet_doc.termlist_begin(); it != snippet_doc.termlist_end(); it++) {
 	if (is_stemmed(*it))
 	    continue;
 
 	for (PositionIterator pit = it.positionlist_begin(); pit != it.positionlist_end(); pit++) {
-	    docterms.push_back(make_pair(*pit, *it));
+	    docterms.push_back(TermPositionInfo(*it, *pit));
 	}
     }
 
@@ -134,13 +134,12 @@ Snipper::Internal::generate_snippet(const string & text)
     // Relevance model for each term.
     map<string, double> term_score;
 
-
     // Smootihg coefficient for relevance probability.
     double alpha = smoothing_coef;
 
     // Init docterms score.
-    for (vector<pair<int, string> >::iterator it = docterms.begin(); it < docterms.end(); it++) {
-	string term = "Z" + stemmer(it->second);
+    for (vector<TermPositionInfo>::iterator it = docterms.begin(); it < docterms.end(); it++) {
+	string term = "Z" + stemmer(it->term);
 	term_score[term] = 0;
     }
 
@@ -179,7 +178,7 @@ Snipper::Internal::generate_snippet(const string & text)
     vector<double> docterms_relevance;
 
     for (unsigned int i = 0; i < docterms.size(); i++) {
-	string term = "Z" + stemmer(docterms[i].second);
+	string term = "Z" + stemmer(docterms[i].term);
 	docterms_relevance.push_back(term_score[term]);
     }
 
@@ -237,7 +236,6 @@ Snipper::Internal::generate_snippet(const string & text)
 	term_gen.index_text(sentence);
 
 	int sent_size = 0;
-	vector<pair<int, string> > sent_terms;
 	for (TermIterator it = sent_doc.termlist_begin(); it != sent_doc.termlist_end(); it++) {
 	    if (is_stemmed(*it)) {
 		continue;

@@ -57,6 +57,21 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 	    RMTermInfo() : coll_occurence(0) { }
 	};
 
+	/** Holds information about a term and it's position in a document */
+	struct TermPositionInfo {
+	    std::string term;
+	    int position;
+
+	    TermPositionInfo(std::string term_, int position_) :
+		term(term_),
+		position(position_) { }
+
+	    bool operator < (const TermPositionInfo & other) const
+	    {
+		return position < other.position;
+	    }
+	};
+
 	/** Stemmer used for generating text terms */
 	Stem stemmer;
 
