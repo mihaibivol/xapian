@@ -21,6 +21,11 @@ class Snipper::Internal : public Xapian::Internal::intrusive_base {
 	static const unsigned int default_rm_docno;
 	static const unsigned int default_window_size;
 
+	/// Copy not allowed
+	Internal(const Internal &);
+	/// Assignment not allowed
+	void operator=(const Internal &);
+
     public:
 	typedef int rm_docid;
 
