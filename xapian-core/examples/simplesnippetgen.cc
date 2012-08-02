@@ -1,9 +1,10 @@
-/** @file simplesearch.cc
- * @brief Simple command-line search utility.
+/** @file simplesnippetgen.cc
+ * @brief Simple command-line search utility with snippet generator.
  *
  * See "quest" for a more sophisticated example.
  */
 /* Copyright (C) 2007,2010 Olly Betts
+ * Copyright (C) 2012 Mihai Bivol
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
