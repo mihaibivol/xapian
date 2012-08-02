@@ -902,6 +902,7 @@ CMD_set,
 CMD_setmap,
 CMD_setrelevant,
 CMD_slice,
+CMD_snippet,
 CMD_split,
 CMD_stoplist,
 CMD_sub,
@@ -921,7 +922,6 @@ CMD_url,
 CMD_value,
 CMD_version,
 CMD_weight,
-CMD_snippet,
 CMD_MACRO // special tag for macro evaluation
 };
 
@@ -1023,6 +1023,7 @@ T(set,		   2, 2, N, 0), // set option value
 T(setmap,	   1, N, N, 0), // set map of option values
 T(setrelevant,     0, 1, N, Q), // set rset
 T(slice,	   2, 2, N, 0), // slice a list using a second list
+T(snippet,	   1, 1, N, 0), // generate snippet from text
 T(split,	   1, 2, N, 0), // split a string to give a list
 T(stoplist,	   0, 0, N, Q), // return list of stopped terms
 T(sub,		   2, 2, N, 0), // subtract
@@ -1045,7 +1046,6 @@ T(url,		   1, 1, N, 0), // url encode argument
 T(value,	   1, 2, N, 0), // return document value
 T(version,	   0, 0, N, 0), // omega version string
 T(weight,	   0, 0, N, 0), // weight of the current hit
-T(snippet,	   1, 1, N, 0), // generate snippet from text
 { NULL,{0,	   0, 0, 0, 0}}
 };
 
@@ -1852,6 +1852,13 @@ eval(const string &fmt, const vector<string> &param)
 		}
 	        break;
 	    }
+	    case CMD_snippet: {
+		Xapian::Snipper snipper;
+		snipper.set_mset(mset);
+		snipper.set_stemmer(Xapian::Stem(option["stemmer"]));
+		value = snipper.generate_snippet(args[0]);
+		break;
+	    }
 	    case CMD_split: {
 		string split;
 		if (args.size() == 1) {
@@ -2048,13 +2055,6 @@ eval(const string &fmt, const vector<string> &param)
 	    case CMD_weight:
 		value = double_to_string(weight);
 		break;
-	    case CMD_snippet: {
-		Xapian::Snipper snipper;
-		snipper.set_mset(mset);
-		snipper.set_stemmer(Xapian::Stem(option["stemmer"]));
-		value = snipper.generate_snippet(args[0]);
-		break;
-	    }
 	    default: {
 		args.insert(args.begin(), param[0]);
 		int macro_no = func->second->tag - CMD_MACRO;
