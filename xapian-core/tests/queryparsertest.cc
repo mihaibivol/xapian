@@ -1674,6 +1674,8 @@ static const test test_value_daterange2_queries[] = {
     { "created:12/03/99..12/04/01", "0 * VALUE_RANGE 1 19991203 20011204" },
     { "modified:03-12-99..04-14-01", "0 * VALUE_RANGE 2 19990312 20010414" },
     { "accessed:01/30/70..02/02/69", "0 * VALUE_RANGE 3 19700130 20690202" },
+    // In <=1.2.12, and in 1.3.0, this gave "Unknown range operation":
+    { "deleted:12/03/99..12/04/01", "0 * VALUE_RANGE 4 19990312 20010412" },
     { "1999-03-12..2001-04-14", "Unknown range operation" },
     { "12/03/99..created:12/04/01", "Unknown range operation" },
     { "12/03/99created:..12/04/01", "Unknown range operation" },
@@ -1690,9 +1692,14 @@ static bool test_qp_value_daterange2()
     Xapian::DateValueRangeProcessor vrp_cdate(1, "created:", true, true, 1970);
     Xapian::DateValueRangeProcessor vrp_mdate(2, "modified:", true, true, 1970);
     Xapian::DateValueRangeProcessor vrp_adate(3, "accessed:", true, true, 1970);
+    // Regression test - here a const char * was taken as a bool rather than a
+    // std::string when resolving the overloaded forms.  Fixed in 1.2.13 and
+    // 1.3.1.
+    Xapian::DateValueRangeProcessor vrp_ddate(4, "deleted:");
     qp.add_valuerangeprocessor(&vrp_cdate);
     qp.add_valuerangeprocessor(&vrp_mdate);
     qp.add_valuerangeprocessor(&vrp_adate);
+    qp.add_valuerangeprocessor(&vrp_ddate);
     for (const test *p = test_value_daterange2_queries; p->query; ++p) {
 	string expect, parsed;
 	if (p->expect)
@@ -1778,6 +1785,121 @@ static bool test_qp_value_customrange1()
     AuthorValueRangeProcessor vrp_author;
     qp.add_valuerangeprocessor(&vrp_author);
     for (const test *p = test_value_customrange1_queries; p->query; ++p) {
+	string expect, parsed;
+	if (p->expect)
+	    expect = p->expect;
+	else
+	    expect = "parse error";
+	try {
+	    Xapian::Query qobj = qp.parse_query(p->query);
+	    parsed = qobj.get_description();
+	    expect = string("Query(") + expect + ')';
+	} catch (const Xapian::QueryParserError &e) {
+	    parsed = e.get_msg();
+	} catch (const Xapian::Error &e) {
+	    parsed = e.get_description();
+	} catch (...) {
+	    parsed = "Unknown exception!";
+	}
+	tout << "Query: " << p->query << '\n';
+	TEST_STRINGS_EQUAL(parsed, expect);
+    }
+    return true;
+}
+
+class TitleFieldProcessor : public Xapian::FieldProcessor {
+    Xapian::Query operator()(const std::string & str) {
+	if (str == "all")
+	    return Xapian::Query::MatchAll;
+	return Xapian::Query("S" + str);
+    }
+};
+
+class HostFieldProcessor : public Xapian::FieldProcessor {
+    Xapian::Query operator()(const std::string & str) {
+	if (str == "*")
+	    return Xapian::Query::MatchAll;
+	string res = "H";
+	for (string::const_iterator i = str.begin(); i != str.end(); ++i)
+	    res += tolower((unsigned char)*i);
+	return Xapian::Query(res);
+    }
+};
+
+static const test test_fieldproc1_queries[] = {
+    { "title:test", "Stest" },
+    { "title:all", "<alldocuments>" },
+    { "host:Xapian.org", "0 * Hxapian.org" },
+    { "host:*", "0 * <alldocuments>" },
+    { NULL, NULL }
+};
+
+// FieldProcessor test.
+static bool test_qp_fieldproc1()
+{
+    Xapian::QueryParser qp;
+    TitleFieldProcessor title_fproc;
+    HostFieldProcessor host_fproc;
+    qp.add_prefix("title", &title_fproc);
+    qp.add_boolean_prefix("host", &host_fproc);
+    for (const test *p = test_fieldproc1_queries; p->query; ++p) {
+	string expect, parsed;
+	if (p->expect)
+	    expect = p->expect;
+	else
+	    expect = "parse error";
+	try {
+	    Xapian::Query qobj = qp.parse_query(p->query);
+	    parsed = qobj.get_description();
+	    expect = string("Query(") + expect + ')';
+	} catch (const Xapian::QueryParserError &e) {
+	    parsed = e.get_msg();
+	} catch (const Xapian::Error &e) {
+	    parsed = e.get_description();
+	} catch (...) {
+	    parsed = "Unknown exception!";
+	}
+	tout << "Query: " << p->query << '\n';
+	TEST_STRINGS_EQUAL(parsed, expect);
+    }
+    return true;
+}
+
+class DateRangeFieldProcessor : public Xapian::FieldProcessor {
+    Xapian::Query operator()(const std::string & str) {
+	// In reality, these would be built from the current date, but for
+	// testing it is much simpler to fix the date.
+	if (str == "today")
+	    return Xapian::Query(Xapian::Query::OP_VALUE_GE, 1, "20120725");
+	if (str == "this week")
+	    return Xapian::Query(Xapian::Query::OP_VALUE_GE, 1, "20120723");
+	if (str == "this month")
+	    return Xapian::Query(Xapian::Query::OP_VALUE_GE, 1, "20120701");
+	if (str == "this year")
+	    return Xapian::Query(Xapian::Query::OP_VALUE_GE, 1, "20120101");
+	if (str == "this decade")
+	    return Xapian::Query(Xapian::Query::OP_VALUE_GE, 1, "20100101");
+	if (str == "this century")
+	    return Xapian::Query(Xapian::Query::OP_VALUE_GE, 1, "20000101");
+	throw Xapian::QueryParserError("Didn't understand date specification '" + str + "'");
+    }
+};
+
+static const test test_fieldproc2_queries[] = {
+    { "date:\"this week\"", "0 * VALUE_GE 1 20120723" },
+    { "date:23/7/2012..25/7/2012", "0 * VALUE_RANGE 1 20120723 20120725" },
+    { NULL, NULL }
+};
+
+// Test using FieldProcessor and ValueRangeProcessor together.
+static bool test_qp_fieldproc2()
+{
+    Xapian::QueryParser qp;
+    DateRangeFieldProcessor date_fproc;
+    qp.add_boolean_prefix("date", &date_fproc);
+    Xapian::DateValueRangeProcessor vrp_date(1, "date:");
+    qp.add_valuerangeprocessor(&vrp_date);
+    for (const test *p = test_fieldproc2_queries; p->query; ++p) {
 	string expect, parsed;
 	if (p->expect)
 	    expect = p->expect;
@@ -2645,6 +2767,8 @@ static const test_desc tests[] = {
     TESTCASE(qp_value_daterange2),
     TESTCASE(qp_value_stringrange1),
     TESTCASE(qp_value_customrange1),
+    TESTCASE(qp_fieldproc1),
+    TESTCASE(qp_fieldproc2),
     TESTCASE(qp_stoplist1),
     TESTCASE(qp_spell1),
     TESTCASE(qp_spell2),

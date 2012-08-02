@@ -1,3 +1,39 @@
+Tue Jul 24 09:06:14 GMT 2012  Olly Betts <olly@survex.com>
+
+	* lua/util.i: Fix functor wrappers which return strings to be zero-byte
+	  clean.
+
+Tue Jul 24 06:06:24 GMT 2012  Olly Betts <olly@survex.com>
+
+	* lua/util.i: Fix wrapping of FieldProcessor.
+	* lua/smoketest.lua: Add test coverage for wrapping of FieldProcessor.
+
+Tue Jul 24 04:11:50 GMT 2012  Olly Betts <olly@survex.com>
+
+	* php/smoketest.php: Fix XapianFieldProcessor testcase.
+
+Tue Jul 24 03:45:15 GMT 2012  Olly Betts <olly@survex.com>
+
+	* csharp/Makefile.am,java/Makefile.am,lua/util.i,perl/util.i.in,
+	  python/extra.i,python/generate-python-exceptions,xapian-headers.i:
+	  Wrap FieldProcessor.
+	* php/smoketest.php: Add simple test of subclassing
+	  XapianFieldProcessor.
+
+Sat Jul 21 13:18:48 GMT 2012  Olly Betts <olly@survex.com>
+
+	* lua/docs/examples/simpleexpand.lua,
+	  lua/docs/examples/simplematchdecider.lua,
+	  lua/docs/examples/simplesearch.lua: query:get_description() should
+	  be str(query).  Fixes #600.
+	* lua/docs/index.html: Document that get_description() is mapped to
+	  str(), and end() to _end().
+
+Thu Jul 12 05:11:26 GMT 2012  Olly Betts <olly@survex.com>
+
+	* configure.ac: Overhaul checking the C# tools to use modern names in
+	  preference.
+
 Tue Jul 03 03:13:40 GMT 2012  Dan Colish <dcolish@gmail.com>
 
 	* generic/.gitignore,php/.gitignore,tcl8/.gitignore: Update for

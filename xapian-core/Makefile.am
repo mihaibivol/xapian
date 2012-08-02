@@ -140,3 +140,8 @@ xapian-config.1: xapian-config makemanpage
 endif
 
 MAINTAINERCLEANFILES += $(BUILT_SOURCES)
+
+.PHONY: check-syntax
+
+check-syntax:
+	$(CXXCOMPILE) -fsyntax-only -gstabs+ $(CHK_SOURCES)
