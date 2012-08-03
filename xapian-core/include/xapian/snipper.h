@@ -87,6 +87,15 @@ class XAPIAN_VISIBILITY_DEFAULT Snipper {
      * @return	    Text of the snippet relevant to the model from input.
      */
     std::string generate_snippet(const std::string & text);
+
+    /** Return number of documents in the relevance model */
+    int rm_doccount();
+
+    /** Return number of distinct terms in the relevance model */
+    int rm_termcount();
+
+    /** Return the collection size of the relevance model */
+    int rm_collection_size();
 };
 
 }
