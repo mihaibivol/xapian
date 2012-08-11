@@ -10,9 +10,9 @@ noinst_HEADERS +=\
 	api/queryinternal.h\
 	api/queryvector.h\
 	api/replication.h\
+	api/snipperinternal.h\
 	api/termlist.h\
-	api/vectortermlist.h\
-	api/snipperinternal.h
+	api/vectortermlist.h
 
 EXTRA_DIST +=\
 	api/dir_contents\
@@ -41,6 +41,7 @@ lib_src +=\
 	api/queryinternal.cc\
 	api/registry.cc\
 	api/replication.cc\
+	api/snipper.cc\
 	api/sortable-serialise.cc\
 	api/termiterator.cc\
 	api/termlist.cc\
@@ -48,5 +49,4 @@ lib_src +=\
 	api/valuerangeproc.cc\
 	api/valuesetmatchdecider.cc\
 	api/vectortermlist.cc\
-	api/version.cc\
-	api/snipper.cc
+	api/version.cc
