@@ -36,6 +36,7 @@ RSTDOCS = \
 	replication.rst \
 	scalability.rst \
 	serialisation.rst \
+	snipper.rst \
 	sorting.rst \
 	spelling.rst \
 	stemming.rst \
